@@ -38,29 +38,69 @@ export default function UploadPage() {
     setIsSubmitting(true);
 
     try {
-      // Validate inputs
-      if (!title.trim()) {
+      // Enhanced input validation
+      const trimmedTitle = title.trim();
+      const trimmedCode = code.trim();
+      const trimmedDescription = description.trim();
+
+      if (!trimmedTitle) {
         setError('Please enter a task title');
         setIsSubmitting(false);
         return;
       }
 
-      if (!code.trim()) {
+      if (trimmedTitle.length < 3) {
+        setError('Task title must be at least 3 characters long');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (trimmedTitle.length > 200) {
+        setError('Task title must be less than 200 characters');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!trimmedCode) {
         setError('Please paste your code');
         setIsSubmitting(false);
         return;
       }
 
-      // Insert task into database
+      if (trimmedCode.length < 10) {
+        setError('Code must be at least 10 characters long');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (trimmedCode.length > 50000) {
+        setError('Code must be less than 50,000 characters');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (trimmedDescription && trimmedDescription.length > 1000) {
+        setError('Description must be less than 1,000 characters');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!language) {
+        setError('Please select a programming language');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Insert task into database with validated data
       const { data, error: insertError } = await supabase
         .from('tasks')
         .insert([
           {
             user_id: user.id,
-            title: title.trim(),
-            code: code.trim(),
+            title: trimmedTitle,
+            code: trimmedCode,
             language,
-            description: description.trim(),
+            description: trimmedDescription || null,
           },
         ])
         .select()
@@ -114,7 +154,10 @@ export default function UploadPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Fibonacci Sequence Implementation"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-gray-900 bg-white"
+                maxLength={200}
+                required
               />
+              <p className="text-xs text-gray-500 mt-1">{title.length}/200 characters</p>
             </div>
 
             {/* Description */}
@@ -129,7 +172,9 @@ export default function UploadPage() {
                 rows={3}
                 placeholder="Describe what your code does and what you'd like feedback on"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-gray-900 bg-white"
+                maxLength={1000}
               />
+              <p className="text-xs text-gray-500 mt-1">{description.length}/1000 characters</p>
             </div>
 
             {/* Language */}
@@ -166,8 +211,13 @@ export default function UploadPage() {
                 rows={15}
                 placeholder="Paste your code here..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition font-mono text-sm text-gray-900 bg-white"
+                maxLength={50000}
+                required
               />
-              <p className="text-xs text-gray-500 mt-2">{code.length} characters</p>
+              <p className={`text-xs mt-2 ${code.length > 45000 ? 'text-red-600' : 'text-gray-500'}`}>
+                {code.length.toLocaleString()}/50,000 characters
+                {code.length > 45000 && ' (nearing limit)'}
+              </p>
             </div>
 
             {/* Buttons */}

@@ -38,31 +38,53 @@ export default function DashboardPage() {
 
   const fetchTasks = async () => {
     try {
+      // OPTIMIZED: Single query with JOIN instead of N+1 queries
+      // Use Supabase's foreign key relationship to fetch tasks with evaluations in one query
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          id,
+          title,
+          created_at,
+          evaluations (
+            task_id,
+            score,
+            is_paid
+          )
+        `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (tasksError) throw tasksError;
 
-      // Fetch evaluations
-      const { data: evaluationsData } = await supabase
-        .from('evaluations')
-        .select('task_id, score, is_paid')
-        .in('task_id', tasksData?.map((t: any) => t.id) || []);
-
+      // Transform data to expected format
       const tasksWithEval = tasksData?.map((task: any) => ({
-        ...task,
-        evaluation: evaluationsData?.find((e: any) => e.task_id === task.id) || null,
+        id: task.id,
+        title: task.title,
+        created_at: task.created_at,
+        evaluation: task.evaluations && task.evaluations.length > 0
+          ? task.evaluations[0]
+          : null,
       })) || [];
 
       setTasks(tasksWithEval);
-      setStats({
-        total: tasksWithEval.length,
-        evaluated: tasksWithEval.filter((t: any) => t.evaluation).length,
-        paid: tasksWithEval.filter((t: any) => t.evaluation?.is_paid).length,
-      });
+
+      // Calculate stats efficiently in a single pass
+      const stats = tasksWithEval.reduce(
+        (acc, task) => {
+          acc.total++;
+          if (task.evaluation) {
+            acc.evaluated++;
+            if (task.evaluation.is_paid) {
+              acc.paid++;
+            }
+          }
+          return acc;
+        },
+        { total: 0, evaluated: 0, paid: 0 }
+      );
+
+      setStats(stats);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
