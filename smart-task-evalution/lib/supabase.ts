@@ -59,6 +59,7 @@ export type Evaluation = {
   strengths: string[];
   improvements: string[];
   full_report: string;
+  fixed_code: string;
   is_paid: boolean;
   created_at: string;
 };

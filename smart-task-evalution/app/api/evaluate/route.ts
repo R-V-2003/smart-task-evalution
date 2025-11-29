@@ -88,12 +88,15 @@ Analyze the code for:
 - **Refactoring**: Code duplication, poor naming, complex functions, violation of SOLID principles, missing abstractions, hard-coded values
 - **Performance**: Time complexity (O(n²) vs O(n)), space complexity, unnecessary loops, inefficient data structures, database N+1 queries, missing caching
 
+**IMPORTANT**: You must also provide a complete rewritten version of the code with ALL improvements applied.
+
 Provide your response in the following JSON format:
 {
   "score": <number 0-100>,
   "strengths": [<string>, <string>, ...],
   "improvements": [<string>, <string>, ...],
-  "fullReport": "<detailed analysis covering: 1. Bug Fixes section with specific bugs found and how to fix them, 2. Refactoring section with code quality improvements, 3. Performance section with optimization opportunities and complexity analysis>"
+  "fullReport": "<detailed analysis covering: 1. Bug Fixes section with specific bugs found and how to fix them, 2. Refactoring section with code quality improvements, 3. Performance section with optimization opportunities and complexity analysis>",
+  "fixedCode": "<complete rewritten code with ALL bugs fixed, refactoring applied, and performance optimizations implemented. Include comments explaining key changes.>"
 }`;
 
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -161,7 +164,8 @@ Provide your response in the following JSON format:
     if (typeof evaluation.score !== 'number' ||
         !Array.isArray(evaluation.strengths) ||
         !Array.isArray(evaluation.improvements) ||
-        typeof evaluation.fullReport !== 'string') {
+        typeof evaluation.fullReport !== 'string' ||
+        typeof evaluation.fixedCode !== 'string') {
       return NextResponse.json({ error: 'Invalid evaluation format from AI' }, { status: 500 });
     }
 
@@ -179,6 +183,7 @@ Provide your response in the following JSON format:
           strengths: evaluation.strengths,
           improvements: evaluation.improvements,
           full_report: evaluation.fullReport,
+          fixed_code: evaluation.fixedCode,
           is_paid: false,
         },
       ])

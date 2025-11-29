@@ -21,6 +21,7 @@ type Evaluation = {
   strengths: string[];
   improvements: string[];
   full_report: string;
+  fixed_code: string;
   is_paid: boolean;
 };
 
@@ -251,9 +252,23 @@ export default function EvaluatePage() {
                   )}
 
                   {evaluation.is_paid && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-green-900 mb-2">Full Report</h4>
-                      <p className="text-sm text-green-800 whitespace-pre-wrap">{evaluation.full_report}</p>
+                    <div className="space-y-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-green-900 mb-2">Full Report</h4>
+                        <p className="text-sm text-green-800 whitespace-pre-wrap">{evaluation.full_report}</p>
+                      </div>
+
+                      {evaluation.fixed_code && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-900 mb-2">Fixed Code</h4>
+                          <p className="text-xs text-blue-700 mb-3">Code with all bugs fixed, refactoring applied, and performance optimizations:</p>
+                          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+                            <pre className="font-mono text-sm">
+                              <code>{evaluation.fixed_code}</code>
+                            </pre>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
