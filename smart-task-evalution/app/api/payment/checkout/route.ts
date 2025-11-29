@@ -54,8 +54,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Evaluation not found' }, { status: 404 });
     }
 
-    if (evaluation.is_paid) {
-      return NextResponse.json({ error: 'This report is already unlocked' }, { status: 400 });
+    // Check if any evaluation for this user is already paid (account-wide unlock)
+    const { data: paidEvaluations } = await supabase
+      .from('evaluations')
+      .select('id')
+      .eq('user_id', evaluation.user_id)
+      .eq('is_paid', true)
+      .limit(1);
+
+    if (paidEvaluations && paidEvaluations.length > 0) {
+      return NextResponse.json({ error: 'Your account already has full access unlocked' }, { status: 400 });
     }
 
     // Create Stripe session

@@ -34,19 +34,20 @@ export async function POST(request: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const evaluationId = session.metadata?.evaluationId;
+    const userId = session.metadata?.userId;
 
-    if (evaluationId) {
-      // Update evaluation as paid
+    if (evaluationId && userId) {
+      // Update ALL evaluations for this user as paid (account-wide unlock)
       await supabase
         .from('evaluations')
         .update({ is_paid: true })
-        .eq('id', evaluationId);
+        .eq('user_id', userId);
 
       // Create payment record
       await supabase.from('payments').insert([
         {
           evaluation_id: evaluationId,
-          user_id: session.metadata?.userId,
+          user_id: userId,
           status: 'completed',
           amount: (session.amount_total || 0) / 100,
           stripe_payment_id: session.payment_intent,
