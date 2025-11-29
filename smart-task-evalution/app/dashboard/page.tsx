@@ -50,18 +50,18 @@ export default function DashboardPage() {
       const { data: evaluationsData } = await supabase
         .from('evaluations')
         .select('task_id, score, is_paid')
-        .in('task_id', tasksData?.map(t => t.id) || []);
+        .in('task_id', tasksData?.map((t: any) => t.id) || []);
 
-      const tasksWithEval = tasksData?.map(task => ({
+      const tasksWithEval = tasksData?.map((task: any) => ({
         ...task,
-        evaluation: evaluationsData?.find(e => e.task_id === task.id) || null,
+        evaluation: evaluationsData?.find((e: any) => e.task_id === task.id) || null,
       })) || [];
 
       setTasks(tasksWithEval);
       setStats({
         total: tasksWithEval.length,
-        evaluated: tasksWithEval.filter(t => t.evaluation).length,
-        paid: tasksWithEval.filter(t => t.evaluation?.is_paid).length,
+        evaluated: tasksWithEval.filter((t: any) => t.evaluation).length,
+        paid: tasksWithEval.filter((t: any) => t.evaluation?.is_paid).length,
       });
     } catch (error) {
       console.error('Error fetching tasks:', error);
