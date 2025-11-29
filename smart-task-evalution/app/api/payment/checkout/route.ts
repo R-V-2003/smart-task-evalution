@@ -11,8 +11,30 @@ const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug logging
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseServiceKey,
+      hasStripeKey: !!stripeSecretKey,
+      supabaseUrl: supabaseUrl ? 'SET' : 'MISSING',
+      supabaseKey: supabaseServiceKey ? 'SET' : 'MISSING',
+      stripeKey: stripeSecretKey ? 'SET' : 'MISSING',
+    });
+
     if (!supabase || !stripe) {
-      return NextResponse.json({ error: 'Services not configured' }, { status: 500 });
+      const missingServices = [];
+      if (!supabase) missingServices.push('Supabase (missing URL or service key)');
+      if (!stripe) missingServices.push('Stripe (missing secret key)');
+
+      return NextResponse.json({
+        error: 'Services not configured',
+        missing: missingServices,
+        debug: {
+          hasSupabaseUrl: !!supabaseUrl,
+          hasSupabaseKey: !!supabaseServiceKey,
+          hasStripeKey: !!stripeSecretKey,
+        }
+      }, { status: 500 });
     }
 
     const { evaluationId } = await request.json();
